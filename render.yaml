@@ -3,7 +3,7 @@ services:
     name: ihm-present
     runtime: python
     env: python
-    region: france
+    region: frankfurt
     plan: free
     branch: master
     buildCommand: |
@@ -27,8 +27,4 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PORT
-        value: 10000
-    disk:
-      name: data-disk
-      mountPath: /opt/render/project/src/db  # monte le disk sur le dossier db/
-      sizeGB: 1
+        value: 5000
