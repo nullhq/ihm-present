@@ -71,13 +71,21 @@ async function startCamera(videoElementId) {
                 width: { ideal: 1280 },
                 height: { ideal: 720 },
                 facingMode: 'user'
-            } 
+            },
+            audio: false
         });
         
         const videoElement = document.getElementById(videoElementId);
         if (videoElement) {
             videoElement.srcObject = stream;
+            videoElement.autoplay = true;
+            videoElement.muted = true;
+            videoElement.playsInline = true;
+            videoElement.play().catch(err => {
+                console.log("[v0] Video play error:", err);
+            });
             currentStream = stream;
+            console.log("[v0] Camera started successfully");
             return true;
         }
         return false;
@@ -328,13 +336,213 @@ function submitRegistration() {
 }
 
 // ====================
-// CAPTURE VIEW - Live Session
+// CAPTURE VIEW - Single Room Photo Capture
 // ====================
 async function initCaptureCamera() {
     const success = await startCamera('capture-video');
     
     if (!success) {
         console.error('Failed to start capture session camera');
+    }
+}
+
+function captureRoomPhoto() {
+    const video = document.getElementById('capture-video');
+    const canvas = document.getElementById('capture-canvas');
+    const loadingDiv = document.getElementById('capture-loading');
+    
+    if (!video || !canvas) return;
+    
+    // Show loading state
+    if (loadingDiv) {
+        loadingDiv.classList.remove('hidden');
+    }
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    // Convert to data URL
+    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+    
+    // Simulate face detection (in production, use a real ML model)
+    setTimeout(() => {
+        processRoomCapture(photoDataUrl);
+        if (loadingDiv) {
+            loadingDiv.classList.add('hidden');
+        }
+    }, 1500);
+}
+
+function processRoomCapture(photoDataUrl) {
+    // Show captured image
+    const previewContainer = document.getElementById('capture-preview-container');
+    const video = document.getElementById('capture-video');
+    const captureStats = document.getElementById('capture-stats');
+    const status = document.getElementById('capture-status');
+    
+    if (previewContainer && video) {
+        video.style.display = 'none';
+        
+        // Create image element for captured photo
+        const img = document.createElement('img');
+        img.src = photoDataUrl;
+        img.className = 'w-full h-full object-cover';
+        img.id = 'captured-room-image';
+        
+        // Clear container and add image
+        previewContainer.innerHTML = '';
+        previewContainer.appendChild(img);
+    }
+    
+    // Simulate face detection results
+    const detectedFaces = [
+        { name: 'Sarah M.', id: '22P001', x: 20, y: 30, w: 12, h: 18, detected: true },
+        { name: 'David K.', id: '22P074', x: 45, y: 35, w: 10, h: 15, detected: true },
+        { name: 'Inconnu', id: 'unknown', x: 70, y: 40, w: 11, h: 16, detected: false }
+    ];
+    
+    // Update detected count
+    const detectedCount = detectedFaces.filter(f => f.detected).length;
+    const detectedCountEl = document.getElementById('detected-count');
+    if (detectedCountEl) {
+        detectedCountEl.textContent = detectedCount;
+    }
+    
+    // Show stats
+    if (captureStats) {
+        captureStats.classList.remove('hidden');
+    }
+    
+    // Update status
+    if (status) {
+        status.innerHTML = `
+            <div class="flex items-center gap-2">
+                <div class="size-2 bg-green-500 rounded-full"></div>
+                <span class="text-green-600">Capture complète - ${detectedCount} étudiants détectés</span>
+            </div>
+        `;
+        status.classList.remove('text-yellow-600', 'bg-yellow-100');
+        status.classList.add('text-green-600', 'bg-green-100');
+    }
+    
+    // Draw bounding boxes on image
+    drawDetectionBoxes(photoDataUrl, detectedFaces);
+    
+    // Update sidebar with results
+    updateDetectionResults(detectedFaces);
+    
+    // Update attendance stats
+    updateAttendanceStats(detectedFaces);
+}
+
+function drawDetectionBoxes(photoDataUrl, faces) {
+    const container = document.getElementById('detected-faces-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    container.classList.remove('hidden');
+    
+    faces.forEach((face, index) => {
+        const box = document.createElement('div');
+        box.className = `absolute border-2 rounded-lg ${face.detected ? 'border-green-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'border-yellow-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]'} flex flex-col items-center justify-end pb-2`;
+        box.style.left = `${face.x}%`;
+        box.style.top = `${face.y}%`;
+        box.style.width = `${face.w}%`;
+        box.style.height = `${face.h}%`;
+        
+        const label = document.createElement('div');
+        label.className = `${face.detected ? 'bg-green-500' : 'bg-yellow-500'} text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2`;
+        label.textContent = face.name;
+        
+        box.appendChild(label);
+        container.appendChild(box);
+    });
+}
+
+function updateDetectionResults(faces) {
+    const list = document.getElementById('detected-students-list');
+    if (!list) return;
+    
+    list.innerHTML = '';
+    
+    const detectedStudents = faces.filter(f => f.detected);
+    const unknownStudents = faces.filter(f => !f.detected);
+    
+    if (detectedStudents.length === 0 && unknownStudents.length === 0) {
+        list.innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Aucun visage détecté</p>';
+        return;
+    }
+    
+    // Detected students
+    if (detectedStudents.length > 0) {
+        const header = document.createElement('p');
+        header.className = 'text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mt-3';
+        header.textContent = `Reconnus (${detectedStudents.length})`;
+        list.appendChild(header);
+        
+        detectedStudents.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-green-200 dark:border-green-900/30 rounded-lg shadow-sm';
+            item.innerHTML = `
+                <div class="relative size-10 rounded-full overflow-hidden bg-green-100">
+                    <span class="material-symbols-outlined text-green-600">check_circle</span>
+                    <div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+                </div>
+                <div>
+                    <p class="text-sm font-bold">${student.name}</p>
+                    <p class="text-xs text-slate-500">Matricule: ${student.id}</p>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+    
+    // Unknown/Unrecognized students
+    if (unknownStudents.length > 0) {
+        const header = document.createElement('p');
+        header.className = 'text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mt-3';
+        header.textContent = `Non identifiés (${unknownStudents.length})`;
+        list.appendChild(header);
+        
+        unknownStudents.forEach(student => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-yellow-200 dark:border-yellow-900/30 rounded-lg shadow-sm';
+            item.innerHTML = `
+                <div class="relative size-10 rounded-full overflow-hidden bg-yellow-100">
+                    <span class="material-symbols-outlined text-yellow-600">help</span>
+                </div>
+                <div>
+                    <p class="text-sm font-bold flex items-center gap-1">${student.name} <span class="material-symbols-outlined text-yellow-600 text-sm">warning</span></p>
+                    <p class="text-xs text-slate-500">À identifier manuellement</p>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+}
+
+function updateAttendanceStats(faces) {
+    const detectedCount = faces.filter(f => f.detected).length;
+    const totalCount = 45; // Class size
+    const percentage = Math.round((detectedCount / totalCount) * 100);
+    
+    const progressBar = document.getElementById('attendance-progress');
+    const percentText = document.getElementById('attendance-percent');
+    const absentText = document.getElementById('attendance-absent');
+    
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
+    if (percentText) {
+        percentText.textContent = `${percentage}% Présents`;
+    }
+    if (absentText) {
+        absentText.textContent = `${totalCount - detectedCount} Absents`;
     }
 }
 

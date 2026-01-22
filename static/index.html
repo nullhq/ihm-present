@@ -101,7 +101,7 @@
         <header class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary">school</span>
-                <span class="font-bold">Present</span>
+                <span class="font-bold">I'm Present</span>
             </div>
             <button class="p-2" onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('inset-y-0'); document.querySelector('aside').classList.toggle('left-0');">
                 <span class="material-symbols-outlined">menu</span>
@@ -291,93 +291,76 @@
         </div>
     </template>
 
-    <!-- VIEW: CAPTURE (from i3.html) -->
+    <!-- VIEW: CAPTURE (from i3.html) - Single room capture -->
     <template id="view-capture">
         <div class="flex h-full flex-col">
             <header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 h-16 shrink-0">
                 <div class="flex items-center gap-4">
                     <h2 class="text-base font-bold">ANI-IA 4057 : Interface Homme Machine</h2>
-                    <div class="flex items-center gap-2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full"><span class="animate-pulse w-2 h-2 bg-green-600 rounded-full"></span> SESSION EN DIRECT</div>
+                    <div id="capture-status" class="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full"><span class="animate-pulse w-2 h-2 bg-yellow-600 rounded-full"></span> En attente de capture</div>
                 </div>
                 <div class="flex gap-2">
-                    <button class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800">Pause</button>
-                    <button onclick="router('review')" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 shadow-sm">Terminer la session</button>
+                    <button id="capture-room-btn" onclick="captureRoomPhoto()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-blue-600 shadow-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">camera</span> Capturer la salle
+                    </button>
+                    <button onclick="router('review')" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600">Terminer</button>
                 </div>
             </header>
             <div class="flex flex-1 overflow-hidden">
-                <main class="flex-1 bg-black relative flex items-center justify-center overflow-hidden group">
-                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b955?auto=format&fit=crop&q=80" class="absolute inset-0 w-full h-full object-cover opacity-80" />
+                <!-- Video Preview Area -->
+                <div class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
+                    <div id="capture-preview-container" class="w-full h-full relative flex items-center justify-center bg-slate-900">
+                        <video id="capture-video" class="w-full h-full object-cover" playsinline></video>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none hidden" id="capture-overlay">
+                            <div class="absolute inset-0 bg-black/40"></div>
+                        </div>
+                    </div>
+                    <!-- Captured Photo Display -->
+                    <canvas id="capture-canvas" style="display:none;"></canvas>
                     
-                    <!-- Fake Bounding Boxes -->
-                    <div class="absolute top-[30%] left-[20%] w-[12%] h-[18%] border-2 border-success rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.5)] flex flex-col items-center justify-end pb-2">
-                        <div class="bg-success text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2">Sarah M.</div>
+                    <!-- Detected Faces Overlay (shown after capture) -->
+                    <div id="detected-faces-container" class="absolute inset-0 pointer-events-none hidden">
+                        <!-- Bounding boxes will be added dynamically -->
                     </div>
-                    <div class="absolute top-[35%] left-[45%] w-[10%] h-[15%] border-2 border-success rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.5)] flex flex-col items-center justify-end pb-2">
-                         <div class="bg-success text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2">David K.</div>
-                    </div>
-                    <div class="absolute top-[40%] right-[15%] w-[11%] h-[16%] border-2 border-warning rounded-lg shadow-[0_0_15px_rgba(245,158,11,0.5)] flex flex-col items-center justify-end pb-2">
-                         <div class="bg-warning text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2 flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">warning</span> Inconnu</div>
-                    </div>
-
+                    
                     <!-- Stats Overlay -->
-                    <div class="absolute top-4 left-4 flex gap-3">
+                    <div id="capture-stats" class="absolute top-4 left-4 flex gap-3 hidden">
                         <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg flex items-center gap-3 border border-slate-200 dark:border-slate-700">
                             <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary"><span class="material-symbols-outlined">face</span></div>
-                            <div><p class="text-xs uppercase text-slate-500 font-bold tracking-wider">Détectés</p><p class="font-bold text-xl leading-none">24</p></div>
+                            <div><p class="text-xs uppercase text-slate-500 font-bold tracking-wider">Détectés</p><p id="detected-count" class="font-bold text-xl leading-none">0</p></div>
                         </div>
                     </div>
                     
-                    <div class="absolute top-4 right-4 bg-red-600/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm">
-                        <span class="block size-2 rounded-full bg-white animate-pulse"></span> EN DIRECT
+                    <!-- Loading Indicator -->
+                    <div id="capture-loading" class="absolute inset-0 flex items-center justify-center bg-black/50 hidden">
+                        <div class="text-center">
+                            <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+                            <p class="text-white font-medium">Détection des visages en cours...</p>
+                        </div>
                     </div>
-                </main>
-                <!-- Right Log -->
+                </div>
+                
+                <!-- Right Sidebar - Results -->
                 <aside class="w-[320px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 overflow-y-auto hidden lg:flex flex-col z-10 shadow-xl">
                     <div class="p-4 border-b border-slate-200 dark:border-slate-800">
-                        <div class="flex justify-between items-center mb-4">
-                             <h3 class="font-bold text-lg">Journal de session</h3>
-                             <button class="text-primary text-sm font-medium">Voir tout</button>
-                        </div>
-                        <input type="text" placeholder="Rechercher un étudiant..." class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm px-4 py-2"/>
+                        <h3 class="font-bold text-lg">Résultats de détection</h3>
+                        <p class="text-xs text-slate-500 mt-1">Étudiants détectés dans la capture</p>
                     </div>
-                    <div class="p-4 space-y-3 flex-1 overflow-y-auto">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Reconnus (22)</p>
-                        <!-- Item -->
-                        <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-sm">
-                            <div class="relative size-10 rounded-full overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/>
-                                <div class="absolute bottom-0 right-0 size-3 bg-success rounded-full border-2 border-white dark:border-slate-800"></div>
-                            </div>
-                            <div><p class="text-sm font-bold">Douanla Bruna</p><p class="text-xs text-slate-500">Matricule: 22P025</p></div>
-                        </div>
-                        <!-- Item -->
-                        <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-sm">
-                            <div class="relative size-10 rounded-full overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/>
-                                <div class="absolute bottom-0 right-0 size-3 bg-success rounded-full border-2 border-white dark:border-slate-800"></div>
-                            </div>
-                            <div><p class="text-sm font-bold">Fredy TABOUTSA</p><p class="text-xs text-slate-500">Matricule: 22P074</p></div>
-                        </div>
+                    <div id="detected-students-list" class="p-4 space-y-3 flex-1 overflow-y-auto">
+                        <p class="text-xs text-slate-500 text-center py-6">Aucune capture encore</p>
                     </div>
                     <!-- Footer Stats -->
                     <div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                         <div class="flex justify-between text-sm mb-2"><span>Taille de la classe</span><span class="font-bold">45</span></div>
                         <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                            <div class="bg-success h-full w-[48%]"></div>
+                            <div id="attendance-progress" class="bg-success h-full w-0 transition-all"></div>
                         </div>
-                         <div class="flex justify-between items-center text-xs mt-2">
-                            <span class="text-success font-bold">48% Présents</span>
-                            <span class="text-slate-400">23 Absents</span>
+                        <div class="flex justify-between items-center text-xs mt-2">
+                            <span id="attendance-percent" class="text-success font-bold">0% Présents</span>
+                            <span id="attendance-absent" class="text-slate-400">0 Absents</span>
                         </div>
                     </div>
                 </aside>
-            </div>
-            <!-- Toast -->
-             <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-bounce">
-                <div class="bg-white dark:bg-slate-800 shadow-lg rounded-full px-4 py-2 flex items-center gap-3 border border-slate-100 dark:border-slate-700">
-                    <span class="flex size-2 rounded-full bg-success"></span>
-                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">Fredy Taboutsa détectée.</p>
-                </div>
             </div>
         </div>
     </template>
@@ -446,7 +429,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Fredy Taboutsa</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Taboutsa Fredy</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 font-mono text-slate-500">22P074</td>
@@ -458,7 +441,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Dounala Bruna</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Douanla Bruna</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 font-mono text-slate-500">22P025</td>
@@ -482,7 +465,7 @@
                 </table>
                  <!-- Pagination -->
                 <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 px-6 py-4">
-                    <p class="text-sm text-slate-500">Affichage <span class="font-bold">1-3</span> sur 45</p>
+                    <p class="text-sm text-slate-500">Affichage <span class="font-bold">1-3</span> sur 17</p>
                     <div class="flex gap-2">
                         <button class="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded text-sm disabled:opacity-50" disabled>Précédent</button>
                         <button class="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Suivant</button>
@@ -532,12 +515,12 @@
                             <tbody class="text-sm">
                                 <tr class="border-b border-slate-100">
                                     <td class="py-4 font-mono text-slate-500">22P074</td>
-                                    <td class="py-4 font-bold text-slate-800">Fredy Taboutsa</td>
+                                    <td class="py-4 font-bold text-slate-800">Taboutsa Fredy</td>
                                     <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
                                     <td class="py-4 text-right font-mono text-slate-600">08:55</td>
                                 </tr>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">22P075</td>
+                                    <td class="py-4 font-mono text-slate-500">22P025</td>
                                     <td class="py-4 font-bold text-slate-800">Douanla Bruna</td>
                                     <td class="py-4"><span class="text-red-700 font-bold bg-red-50 px-2 py-1 rounded-md">Absent</span></td>
                                     <td class="py-4 text-right font-mono text-slate-600">-</td>
@@ -554,8 +537,8 @@
                     <div class="mt-auto p-12 bg-slate-50 border-t border-slate-100">
                         <div class="flex justify-between items-center text-sm">
                             <div class="flex gap-6">
-                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Présents</span><span class="text-xl font-bold text-green-600">12</span></div>
-                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Absents</span><span class="text-xl font-bold text-red-600">5</span></div>
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Présents</span><span class="text-xl font-bold text-green-600">2</span></div>
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Absents</span><span class="text-xl font-bold text-red-600">1</span></div>
                             </div>
                             <div class="text-right"><p class="text-slate-400 text-xs italic">Généré le 24 oct. 2025</p><p class="text-slate-400 text-xs mt-1">Autorisé par Dr. KAMENI</p></div>
                         </div>
