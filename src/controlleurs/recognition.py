@@ -3,10 +3,10 @@
 import json
 import numpy as np
 from deepface import DeepFace
-from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
 import io
 import os
+from src.utils.math import cosine_similarity
 
 DB_PATH = "students.json"
 IMAGES_DIR = "images"
@@ -94,7 +94,7 @@ def scan_image(image_file):  # FileStorage object
         if not known_embs:
             continue
 
-        similarities = cosine_similarity(emb_np, known_embs)[0]
+        similarities = cosine_similarity(emb_np, np.array(known_embs))
         max_idx = np.argmax(similarities)
         max_sim = similarities[max_idx]
 
