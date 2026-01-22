@@ -8,8 +8,9 @@ import io
 import os
 from src.utils.math import cosine_similarity
 
-DB_PATH = "students.json"
-IMAGES_DIR = "images"
+DB_DIR = "db"
+DB_PATH = os.path.join(DB_DIR, "students.json")
+IMAGES_DIR = os.path.join(DB_DIR, "images")
 MODELS_DIR = "models"
 
 # Ensure directories exist
