@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>I'm Present !</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2233",
+                        "success": "#10b981",
+                        "warning": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Print Styles for Export View */
+        @media print {
+            aside, header, .no-print { display: none !important; }
+            main { margin: 0; padding: 0; }
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex overflow-hidden">
+
+    <!-- 1. NAVIGATION LATÉRALE (Commune à toute l'app) -->
+    <aside class="w-64 bg-white dark:bg-[#1a202c] border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 z-20 hidden md:flex transition-all duration-300">
+        <div class="p-6 flex items-center gap-3">
+            <div class="bg-primary/10 rounded-lg p-2">
+                <span class="material-symbols-outlined text-primary text-2xl">school</span>
+            </div>
+            <div>
+                <h1 class="text-slate-900 dark:text-white text-lg font-bold leading-tight">I'm Present !</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-xs font-normal">Portail Enseignant</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 flex flex-col gap-2 mt-4">
+            <button onclick="router('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full text-left">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span class="text-sm font-medium">Tableau de bord</span>
+            </button>
+            <button onclick="router('register')" id="nav-register" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full text-left">
+                <span class="material-symbols-outlined">person_add</span>
+                <span class="text-sm font-medium">Inscrire un étudiant</span>
+            </button>
+            <button onclick="router('capture')" id="nav-capture" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full text-left">
+                <span class="material-symbols-outlined">photo_camera</span>
+                <span class="text-sm font-medium">Séance de cours</span>
+            </button>
+            <button onclick="router('review')" id="nav-review" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full text-left">
+                <span class="material-symbols-outlined">fact_check</span>
+                <span class="text-sm font-medium">Journal de présence</span>
+            </button>
+            <button onclick="router('export')" id="nav-export" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-full text-left">
+                <span class="material-symbols-outlined">picture_as_pdf</span>
+                <span class="text-sm font-medium">Rapports</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="relative size-10 rounded-full bg-slate-200 overflow-hidden" style="background-image: url('https://ui-avatars.com/api/?name=Dr+KAMENI&background=0D8ABC&color=fff'); background-size: cover;"></div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-semibold text-slate-900 dark:text-white">Dr. KAMENI</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400">Dépt. Genie Informatique</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. ZONE DE CONTENU PRINCIPAL -->
+    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
+        <!-- Header Mobile (Visible seulement sur petit écran) -->
+        <header class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">school</span>
+                <span class="font-bold">Present</span>
+            </div>
+            <button class="p-2" onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('inset-y-0'); document.querySelector('aside').classList.toggle('left-0');">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+        </header>
+
+        <!-- Dynamic Content Injector -->
+        <main id="app-content" class="flex-1 overflow-auto bg-background-light dark:bg-background-dark relative">
+            <!-- Content will be loaded here via JS -->
+        </main>
+    </div>
+
+    <!-- 3. TEMPLATES (Les vues sont cachées ici et clonées via JS) -->
+    
+    <!-- VIEW: DASHBOARD (from i1.html) -->
+    <template id="view-dashboard">
+        <div class="p-6 md:p-10 max-w-6xl mx-auto space-y-12 animate-fade-in-up">
+            <div class="text-center space-y-4 max-w-3xl mx-auto">
+                <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary ring-1 ring-inset ring-primary/20">Tableau de bord Enseignant</span>
+                <h2 class="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">Gérez votre classe avec <span class="text-primary">précision</span></h2>
+                <p class="text-lg text-slate-600 dark:text-slate-400">Suivez les présences de manière transparente grâce à la reconnaissance faciale avancée.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full">
+                <!-- Card 1 -->
+                <button onclick="router('register')" class="group relative flex flex-col items-start p-8 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 border border-slate-200 dark:border-slate-700 transition-all text-left">
+                    <div class="mb-6 inline-flex p-4 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 group-hover:bg-primary group-hover:text-white transition-colors"><span class="material-symbols-outlined text-4xl">person_add</span></div>
+                    <h3 class="text-xl font-bold mb-2">Inscrire un étudiant</h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-6">Ajoutez de nouveaux profils étudiants à la base de données en capturant des données faciales.</p>
+                    <div class="mt-auto flex items-center text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">Commencer l'inscription <span class="material-symbols-outlined text-lg ml-1">arrow_forward</span></div>
+                </button>
+                <!-- Card 2 -->
+                <button onclick="router('capture')" class="group relative flex flex-col items-start p-8 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 border border-slate-200 dark:border-slate-700 transition-all text-left ring-1 ring-primary/5">
+                    <div class="absolute top-0 right-0 p-3">
+                        <span class="flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                    </div>
+                    <div class="mb-6 inline-flex p-4 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 group-hover:bg-primary group-hover:text-white transition-colors"><span class="material-symbols-outlined text-4xl">photo_camera</span></div>
+                    <h3 class="text-xl font-bold mb-2">Prendre les présences</h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-6">Démarrez une nouvelle séance de cours avec votre caméra pour marquer les étudiants présents.</p>
+                    <div class="mt-auto flex items-center text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">Lancer le scanner <span class="material-symbols-outlined text-lg ml-1">arrow_forward</span></div>
+                </button>
+                <!-- Card 3 -->
+                <button onclick="router('review')" class="group relative flex flex-col items-start p-8 bg-white dark:bg-slate-800 rounded-xl shadow-sm hover:shadow-xl hover:-translate-y-1 border border-slate-200 dark:border-slate-700 transition-all text-left">
+                    <div class="mb-6 inline-flex p-4 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 group-hover:bg-primary group-hover:text-white transition-colors"><span class="material-symbols-outlined text-4xl">history_edu</span></div>
+                    <h3 class="text-xl font-bold mb-2">Historique des présences</h3>
+                    <p class="text-slate-600 dark:text-slate-400 mb-6">Consultez les séances de cours passées et corrigez les journaux manuellement.</p>
+                    <div class="mt-auto flex items-center text-primary font-semibold text-sm group-hover:underline decoration-2 underline-offset-4">Voir les journaux <span class="material-symbols-outlined text-lg ml-1">arrow_forward</span></div>
+                </button>
+            </div>
+            
+            <div class="pt-8 border-t border-slate-200 dark:border-slate-800">
+                <div class="flex flex-wrap justify-center gap-8 md:gap-16 text-center">
+                    <div><p class="text-3xl font-bold text-slate-900 dark:text-white">17</p><p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Étudiants actifs</p></div>
+                    <div><p class="text-3xl font-bold text-slate-900 dark:text-white">12</p><p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Cours aujourd'hui</p></div>
+                    <div><p class="text-3xl font-bold text-slate-900 dark:text-white">98%</p><p class="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Présence moyenne</p></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- VIEW: REGISTER (from i2.html) -->
+    <template id="view-register">
+        <div class="p-6 md:p-10 max-w-5xl mx-auto h-full overflow-y-auto">
+            <div class="flex items-center gap-2 text-sm text-slate-500 mb-4">
+                <span onclick="router('dashboard')" class="cursor-pointer hover:text-primary">Accueil</span> / <span>Inscription</span>
+            </div>
+            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-6">Inscrire un nouvel étudiant</h2>
+            
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <div class="p-6 md:p-8 border-b border-slate-100 dark:border-slate-700">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2"><span class="material-symbols-outlined text-primary">badge</span> Informations de l'étudiant</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Nom complet de l'étudiant</label>
+                            <input class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2736] text-slate-900 dark:text-white p-3.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400" placeholder="ex: Fredy TABOUTSA" type="text"/>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Matricule de l'étudiant</label>
+                            <input class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2736] text-slate-900 dark:text-white p-3.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400" placeholder="ex: 22P074" type="text"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/30">
+                    <div class="grid lg:grid-cols-12 gap-8">
+                        <div class="lg:col-span-7 flex flex-col gap-4">
+                            <div class="relative w-full aspect-[4/3] bg-black rounded-2xl overflow-hidden shadow-lg group">
+                                <div class="absolute inset-0 camera-overlay pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);"></div>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div class="w-48 h-64 border-2 border-white/50 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+                                </div>
+                                <div class="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium">
+                                    <div class="size-2 bg-green-500 rounded-full animate-pulse"></div> Caméra en direct
+                                </div>
+                                <div class="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 z-10">
+                                    <button class="size-16 rounded-full border-4 border-white bg-transparent flex items-center justify-center hover:scale-105 transition-all"><div class="size-12 bg-white rounded-full hover:bg-primary transition-colors"></div></button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-5 flex flex-col gap-4">
+                            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl text-sm border border-blue-100 dark:border-blue-800">Assurez-vous que l'éclairage est uniforme et que le visage est clair.</div>
+                            <div class="mt-auto pt-4 flex items-center justify-between text-xs text-slate-500 border-t border-slate-200 dark:border-slate-700">
+                                <span>Minimum 3 photos requises</span>
+                                <div class="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary w-[60%] rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <button onclick="router('dashboard')" class="px-6 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Annuler</button>
+                        <button class="px-8 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-blue-600 shadow-lg flex items-center gap-2"><span class="material-symbols-outlined">save</span> Enregistrer l'étudiant</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- VIEW: CAPTURE (from i3.html) -->
+    <template id="view-capture">
+        <div class="flex h-full flex-col">
+            <header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 h-16 shrink-0">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-base font-bold">ANI-IA 4057 : Interface Homme Machine</h2>
+                    <div class="flex items-center gap-2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full"><span class="animate-pulse w-2 h-2 bg-green-600 rounded-full"></span> SESSION EN DIRECT</div>
+                </div>
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800">Pause</button>
+                    <button onclick="router('review')" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 shadow-sm">Terminer la session</button>
+                </div>
+            </header>
+            <div class="flex flex-1 overflow-hidden">
+                <main class="flex-1 bg-black relative flex items-center justify-center overflow-hidden group">
+                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b955?auto=format&fit=crop&q=80" class="absolute inset-0 w-full h-full object-cover opacity-80" />
+                    
+                    <!-- Fake Bounding Boxes -->
+                    <div class="absolute top-[30%] left-[20%] w-[12%] h-[18%] border-2 border-success rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.5)] flex flex-col items-center justify-end pb-2">
+                        <div class="bg-success text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2">Sarah M.</div>
+                    </div>
+                    <div class="absolute top-[35%] left-[45%] w-[10%] h-[15%] border-2 border-success rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.5)] flex flex-col items-center justify-end pb-2">
+                         <div class="bg-success text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2">David K.</div>
+                    </div>
+                    <div class="absolute top-[40%] right-[15%] w-[11%] h-[16%] border-2 border-warning rounded-lg shadow-[0_0_15px_rgba(245,158,11,0.5)] flex flex-col items-center justify-end pb-2">
+                         <div class="bg-warning text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2 flex items-center gap-1"><span class="material-symbols-outlined text-[10px]">warning</span> Inconnu</div>
+                    </div>
+
+                    <!-- Stats Overlay -->
+                    <div class="absolute top-4 left-4 flex gap-3">
+                        <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg flex items-center gap-3 border border-slate-200 dark:border-slate-700">
+                            <div class="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary"><span class="material-symbols-outlined">face</span></div>
+                            <div><p class="text-xs uppercase text-slate-500 font-bold tracking-wider">Détectés</p><p class="font-bold text-xl leading-none">24</p></div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute top-4 right-4 bg-red-600/90 backdrop-blur text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 shadow-sm">
+                        <span class="block size-2 rounded-full bg-white animate-pulse"></span> EN DIRECT
+                    </div>
+                </main>
+                <!-- Right Log -->
+                <aside class="w-[320px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 overflow-y-auto hidden lg:flex flex-col z-10 shadow-xl">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                             <h3 class="font-bold text-lg">Journal de session</h3>
+                             <button class="text-primary text-sm font-medium">Voir tout</button>
+                        </div>
+                        <input type="text" placeholder="Rechercher un étudiant..." class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm px-4 py-2"/>
+                    </div>
+                    <div class="p-4 space-y-3 flex-1 overflow-y-auto">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Reconnus (22)</p>
+                        <!-- Item -->
+                        <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-sm">
+                            <div class="relative size-10 rounded-full overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/>
+                                <div class="absolute bottom-0 right-0 size-3 bg-success rounded-full border-2 border-white dark:border-slate-800"></div>
+                            </div>
+                            <div><p class="text-sm font-bold">Sarah Miller</p><p class="text-xs text-slate-500">Matricule: 2023-CS-042</p></div>
+                        </div>
+                        <!-- Item -->
+                        <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-sm">
+                            <div class="relative size-10 rounded-full overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/>
+                                <div class="absolute bottom-0 right-0 size-3 bg-success rounded-full border-2 border-white dark:border-slate-800"></div>
+                            </div>
+                            <div><p class="text-sm font-bold">Fredy TABOUTSA</p><p class="text-xs text-slate-500">Matricule: 22P074</p></div>
+                        </div>
+                    </div>
+                    <!-- Footer Stats -->
+                    <div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                        <div class="flex justify-between text-sm mb-2"><span>Taille de la classe</span><span class="font-bold">45</span></div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                            <div class="bg-success h-full w-[48%]"></div>
+                        </div>
+                         <div class="flex justify-between items-center text-xs mt-2">
+                            <span class="text-success font-bold">48% Présents</span>
+                            <span class="text-slate-400">23 Absents</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+            <!-- Toast -->
+             <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+                <div class="bg-white dark:bg-slate-800 shadow-lg rounded-full px-4 py-2 flex items-center gap-3 border border-slate-100 dark:border-slate-700">
+                    <span class="flex size-2 rounded-full bg-success"></span>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">Sarah Miller détectée.</p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- VIEW: REVIEW (from i4.html) -->
+    <template id="view-review">
+        <div class="p-6 md:p-8 max-w-6xl mx-auto h-full overflow-y-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <nav class="flex items-center gap-2 text-sm font-medium text-slate-500 mb-2">
+                        <span class="hover:text-primary cursor-pointer">Accueil</span> / <span>ANI-IA 4057</span>
+                    </nav>
+                    <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Vérification des présences</h1>
+                    <p class="text-slate-500 flex items-center gap-2 mt-1"><span class="material-symbols-outlined text-lg">calendar_month</span> 24 oct. 2025 • ANI-IA 4057 : Interface Homme Machine</p>
+                </div>
+                <button onclick="router('export')" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+                    <span class="material-symbols-outlined">picture_as_pdf</span> Générer PDF
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-slate-500">Total</span> <span class="material-symbols-outlined text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-full p-1 text-sm">groups</span></div>
+                    <p class="text-3xl font-bold">17</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                     <div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-slate-500">Présents</span> <span class="material-symbols-outlined text-green-600 bg-green-100 dark:bg-green-900/30 rounded-full p-1 text-sm">check_circle</span></div>
+                    <p class="text-3xl font-bold text-green-600">12</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                     <div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-slate-500">Absents</span> <span class="material-symbols-outlined text-red-600 bg-red-100 dark:bg-red-900/30 rounded-full p-1 text-sm">cancel</span></div>
+                    <p class="text-3xl font-bold text-red-600">5</p>
+                </div>
+                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                     <div class="flex justify-between items-center mb-1"><span class="text-sm font-medium text-slate-500">Taux</span> <span class="material-symbols-outlined text-primary bg-primary/10 rounded-full p-1 text-sm">trending_up</span></div>
+                    <p class="text-3xl font-bold">92%</p>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="bg-white dark:bg-slate-800 rounded-t-xl border-x border-t border-slate-200 dark:border-slate-700 p-4 flex flex-col sm:flex-row justify-between gap-4">
+                <div class="relative max-w-sm w-full">
+                    <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400">search</span>
+                    <input type="text" placeholder="Rechercher par nom ou matricule..." class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 focus:ring-primary"/>
+                </div>
+                <div class="flex gap-2">
+                    <select class="rounded-lg border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm"><option>Tous les statuts</option><option>Présent</option><option>Absent</option></select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white dark:bg-slate-800 rounded-b-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 uppercase text-xs font-semibold tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4">Étudiant</th>
+                            <th class="px-6 py-4">Matricule</th>
+                            <th class="px-6 py-4">Heure de détection</th>
+                            <th class="px-6 py-4">Statut</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Alice Johnson</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-mono text-slate-500">2023001</td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-400"><span class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 09:02</span></td>
+                            <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-green-500"></span> Présent</span></td>
+                            <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Marcus Chen</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-mono text-slate-500">2023042</td>
+                            <td class="px-6 py-4 text-slate-600 dark:text-slate-400"><span class="inline-flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500 px-2 py-1 rounded text-xs"><span class="material-symbols-outlined text-[14px]">warning</span> 09:18</span></td>
+                            <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-green-500"></span> Présent</span></td>
+                            <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Sarah Williams</div><div class="text-xs text-slate-500">Science des données</div></div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 font-mono text-slate-500">2023089</td>
+                            <td class="px-6 py-4 text-slate-400 italic">--:--</td>
+                            <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-red-500"></span> Absent</span></td>
+                            <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                 <!-- Pagination -->
+                <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 px-6 py-4">
+                    <p class="text-sm text-slate-500">Affichage <span class="font-bold">1-3</span> sur 45</p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded text-sm disabled:opacity-50" disabled>Précédent</button>
+                        <button class="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Suivant</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- VIEW: EXPORT (from i5.html) -->
+    <template id="view-export">
+        <div class="flex h-full">
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-100 dark:bg-slate-900">
+                <div class="flex justify-between items-center max-w-[800px] mx-auto mb-4 no-print">
+                    <button onclick="router('review')" class="text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-colors"><span class="material-symbols-outlined">arrow_back</span> Retour au Journal de présence</button>
+                    <button onclick="window.print()" class="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary/90 shadow-md transition-all"><span class="material-symbols-outlined">print</span> Imprimer / Enregistrer PDF</button>
+                </div>
+
+                <!-- Paper Preview -->
+                <div class="bg-white text-black w-full max-w-[800px] mx-auto shadow-xl min-h-[1000px] flex flex-col print:shadow-none print:w-full rounded-sm">
+                    <div class="px-12 pt-12 pb-8 border-b-2 border-slate-100">
+                        <div class="flex justify-between items-start mb-8">
+                            <div class="flex items-center gap-3">
+                                <div class="size-12 bg-primary/90 text-white rounded flex items-center justify-center"><span class="material-symbols-outlined text-3xl">school</span></div>
+                                <div><span class="font-bold text-xl block tracking-tight">ENSPY</span><span class="text-sm text-slate-500 font-semibold tracking-widest">Art et Intelligence Artificielle IV</span></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-black text-slate-900 tracking-tighter">PRÉSENCE</div>
+                                <div class="text-slate-500 font-medium text-sm">RAPPORT #EXP-2025-001</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-8 mt-8 text-sm">
+                            <div><p class="text-slate-400 text-xs font-bold uppercase mb-1">Accueil</p><p class="font-bold text-md text-slate-800">ANI-IA 4057 - Interface Homme Machine</p><p class="text-slate-600">Bloc Pédagogique N2 • Sem. 1, 2025</p></div>
+                            <div class="text-right"><p class="text-slate-400 text-xs font-bold uppercase mb-1">Détails de la session</p><p class="font-bold text-lg text-slate-800">24 oct. 2025</p><p class="text-slate-600">15:50 - 17:50</p></div>
+                        </div>
+                    </div>
+                    <div class="p-12">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-200">
+                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Matricule</th>
+                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Étudiant</th>
+                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Statut</th>
+                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Heure</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-4 font-mono text-slate-500">23001</td>
+                                    <td class="py-4 font-bold text-slate-800">Alice Johnson</td>
+                                    <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
+                                    <td class="py-4 text-right font-mono text-slate-600">08:55</td>
+                                </tr>
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-4 font-mono text-slate-500">23012</td>
+                                    <td class="py-4 font-bold text-slate-800">Sarah Williams</td>
+                                    <td class="py-4"><span class="text-red-700 font-bold bg-red-50 px-2 py-1 rounded-md">Absent</span></td>
+                                    <td class="py-4 text-right font-mono text-slate-600">-</td>
+                                </tr>
+                                <tr class="border-b border-slate-100">
+                                    <td class="py-4 font-mono text-slate-500">23042</td>
+                                    <td class="py-4 font-bold text-slate-800">Marcus Chen</td>
+                                    <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
+                                    <td class="py-4 text-right font-mono text-slate-600">09:02</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-auto p-12 bg-slate-50 border-t border-slate-100">
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex gap-6">
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Présents</span><span class="text-xl font-bold text-green-600">12</span></div>
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Absents</span><span class="text-xl font-bold text-red-600">5</span></div>
+                            </div>
+                            <div class="text-right"><p class="text-slate-400 text-xs italic">Généré le 24 oct. 2025</p><p class="text-slate-400 text-xs mt-1">Autorisé par Dr. KAMENI</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Settings Panel (Right) -->
+            <div class="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 p-6 hidden xl:block no-print shadow-xl z-10">
+                <h3 class="font-bold mb-6 text-slate-900 dark:text-white">Options d'export</h3>
+                <div class="space-y-4">
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Afficher les horodatages</span>
+                        <input type="checkbox" checked class="rounded text-primary focus:ring-primary border-slate-300 dark:border-slate-600 dark:bg-slate-700"/>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Inclure les photos</span>
+                        <input type="checkbox" checked class="rounded text-primary focus:ring-primary border-slate-300 dark:border-slate-600 dark:bg-slate-700"/>
+                    </label>
+                    <label class="flex items-center justify-between cursor-pointer group">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Afficher le résumé</span>
+                        <input type="checkbox" checked class="rounded text-primary focus:ring-primary border-slate-300 dark:border-slate-600 dark:bg-slate-700"/>
+                    </label>
+                </div>
+                <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+                    <button class="w-full flex items-center justify-center gap-2 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 font-medium py-2.5 px-4 rounded-lg transition-all">
+                        <span class="material-symbols-outlined">share</span> Partager le rapport
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- 4. JAVASCRIPT ROUTER -->
+    <script src="./script.js"></script>
+</body>
+</html>
