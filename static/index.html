@@ -50,7 +50,7 @@
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex overflow-hidden">
 
     <!-- 1. NAVIGATION LATÉRALE (Commune à toute l'app) -->
-    <aside class="w-64 bg-white dark:bg-[#1a202c] border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 z-20 hidden md:flex transition-all duration-300">
+    <aside id="mobile-sidebar" class="w-64 bg-white dark:bg-[#1a202c] border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 z-20 hidden md:flex transition-all duration-300 fixed md:relative inset-y-0 left-0 md:left-auto md:top-0">
         <div class="p-6 flex items-center gap-3">
             <div class="bg-primary/10 rounded-lg p-2">
                 <span class="material-symbols-outlined text-primary text-2xl">school</span>
@@ -98,15 +98,18 @@
     <!-- 2. ZONE DE CONTENU PRINCIPAL -->
     <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         <!-- Header Mobile (Visible seulement sur petit écran) -->
-        <header class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+        <header class="md:hidden flex items-center justify-between p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 relative z-30">
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary">school</span>
-                <span class="font-bold">I'm Present</span>
+                <span class="font-bold">Present</span>
             </div>
-            <button class="p-2" onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('inset-y-0'); document.querySelector('aside').classList.toggle('left-0');">
-                <span class="material-symbols-outlined">menu</span>
+            <button id="mobile-menu-btn" class="p-2 relative z-40" onclick="toggleMobileSidebar()">
+                <span class="material-symbols-outlined" id="menu-icon">menu</span>
             </button>
         </header>
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 md:hidden hidden z-10 transition-opacity duration-300"></div>
 
         <!-- Dynamic Content Injector -->
         <main id="app-content" class="flex-1 overflow-auto bg-background-light dark:bg-background-dark relative">
@@ -190,23 +193,25 @@
                     <!-- Mode Selection Buttons -->
                     <div class="flex gap-3 mb-6">
                         <button onclick="setPhotoMode('camera')" id="mode-camera" class="flex-1 px-4 py-2.5 rounded-xl font-medium transition-all bg-primary text-white hover:bg-blue-600 flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined">photo_camera</span> Utiliser la caméra
+                            <span class="material-symbols-outlined">photo_camera</span> 
+                            <span class="hidden md:inline">Utiliser la caméra</span>
+                            <span class="md:hidden">Caméra</span>
                         </button>
                         <button onclick="setPhotoMode('upload')" id="mode-upload" class="flex-1 px-4 py-2.5 rounded-xl font-medium transition-all bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined">upload_file</span> Importer des images
+                            <span class="material-symbols-outlined">upload_file</span> 
+                            <span class="hidden md:inline">Importer des images</span>
+                            <span class="md:hidden">Importer</span>
                         </button>
                     </div>
 
                     <!-- CAMERA MODE -->
                     <div id="camera-mode" class="grid lg:grid-cols-12 gap-8">
                         <div class="lg:col-span-7 flex flex-col gap-4">
-                            <div class="relative w-full aspect-[4/3] bg-black rounded-2xl overflow-hidden shadow-lg group">
-                                <div id="register-video-container" class="absolute inset-0 flex items-center justify-center bg-black">
-                                    <video id="register-video" class="w-full h-full object-cover" playsinline></video>
-                                    <div class="absolute inset-0 camera-overlay pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);"></div>
-                                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div class="w-48 h-64 border-2 border-white/50 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
-                                    </div>
+                            <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-lg group">
+                                <video id="register-video" class="absolute inset-0 w-full h-full object-cover bg-black" playsinline muted autoplay></video>
+                                <div class="absolute inset-0 camera-overlay pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);"></div>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div class="w-48 h-64 border-2 border-white/50 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
                                 </div>
                                 <div class="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium">
                                     <div id="camera-status" class="flex items-center gap-2">
@@ -284,7 +289,7 @@
                     <!-- Buttons -->
                     <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
                         <button onclick="router('dashboard')" class="px-6 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Annuler</button>
-                        <button onclick="submitRegistration()" class="px-8 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-blue-600 shadow-lg flex items-center gap-2"><span class="material-symbols-outlined">save</span> Enregistrer l'étudiant</button>
+                        <button onclick="submitRegistration()" class="px-8 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-blue-600 shadow-lg flex items-center gap-2"><span class="material-symbols-outlined">save</span> <span class="hidden md:inline">Enregistrer l'étudiant</span><span class="md:hidden">Enregistrer</span></button>
                     </div>
                 </div>
             </div>
@@ -294,23 +299,23 @@
     <!-- VIEW: CAPTURE (from i3.html) - Single room capture -->
     <template id="view-capture">
         <div class="flex h-full flex-col">
-            <header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 h-16 shrink-0">
-                <div class="flex items-center gap-4">
-                    <h2 class="text-base font-bold">ANI-IA 4057 : Interface Homme Machine</h2>
-                    <div id="capture-status" class="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full"><span class="animate-pulse w-2 h-2 bg-yellow-600 rounded-full"></span> En attente de capture</div>
+            <header class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 md:px-6 py-3 gap-3 md:gap-4 shrink-0">
+                <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 min-w-0">
+                    <h2 class="text-sm md:text-base font-bold truncate">ANI-IA 4057 : Interface Homme Machine</h2>
+                    <div id="capture-status" class="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full whitespace-nowrap"><span class="animate-pulse w-2 h-2 bg-yellow-600 rounded-full"></span> <span class="hidden sm:inline">En attente de capture</span><span class="sm:hidden">En attente</span></div>
                 </div>
-                <div class="flex gap-2">
-                    <button id="capture-room-btn" onclick="captureRoomPhoto()" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-blue-600 shadow-sm flex items-center gap-2">
-                        <span class="material-symbols-outlined">camera</span> Capturer la salle
+                <div class="flex gap-2 w-full md:w-auto">
+                    <button id="capture-room-btn" onclick="captureRoomPhoto()" class="flex-1 md:flex-none px-3 md:px-4 py-2 bg-primary text-white text-xs md:text-sm font-medium rounded-lg hover:bg-blue-600 shadow-sm flex items-center justify-center md:justify-start gap-2">
+                        <span class="material-symbols-outlined text-sm">camera</span> <span class="hidden md:inline">Capturer la salle</span><span class="md:hidden">Capturer</span>
                     </button>
-                    <button onclick="router('review')" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600">Terminer</button>
+                    <button onclick="router('review')" class="flex-1 md:flex-none px-3 md:px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs md:text-sm rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600">Terminer</button>
                 </div>
             </header>
             <div class="flex flex-1 overflow-hidden">
                 <!-- Video Preview Area -->
                 <div class="flex-1 bg-black relative flex items-center justify-center overflow-hidden">
-                    <div id="capture-preview-container" class="w-full h-full relative flex items-center justify-center bg-slate-900">
-                        <video id="capture-video" class="w-full h-full object-cover" playsinline></video>
+                    <div id="capture-preview-container" class="w-full h-full relative">
+                        <video id="capture-video" class="absolute inset-0 w-full h-full object-cover bg-slate-900" playsinline muted autoplay></video>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none hidden" id="capture-overlay">
                             <div class="absolute inset-0 bg-black/40"></div>
                         </div>
@@ -376,8 +381,8 @@
                     <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Vérification des présences</h1>
                     <p class="text-slate-500 flex items-center gap-2 mt-1"><span class="material-symbols-outlined text-lg">calendar_month</span> 24 oct. 2025 • ANI-IA 4057 : Interface Homme Machine</p>
                 </div>
-                <button onclick="router('export')" class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
-                    <span class="material-symbols-outlined">picture_as_pdf</span> Générer PDF
+                <button onclick="router('export')" class="flex items-center gap-2 bg-primary text-white px-3 md:px-5 py-2.5 rounded-lg font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all whitespace-nowrap text-sm md:text-base">
+                    <span class="material-symbols-outlined">picture_as_pdf</span> <span class="hidden md:inline">Générer PDF</span><span class="md:hidden">PDF</span>
                 </button>
             </div>
 
@@ -413,8 +418,8 @@
             </div>
 
             <!-- Table -->
-            <div class="bg-white dark:bg-slate-800 rounded-b-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                <table class="w-full text-left text-sm">
+            <div class="bg-white dark:bg-slate-800 rounded-b-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-x-auto">
+                <table class="w-full text-left text-sm min-w-max">
                     <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 uppercase text-xs font-semibold tracking-wider">
                         <tr>
                             <th class="px-6 py-4">Étudiant</th>
@@ -429,10 +434,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Taboutsa Fredy</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Alice Johnson</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-500">22P074</td>
+                            <td class="px-6 py-4 font-mono text-slate-500">2023001</td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-400"><span class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 09:02</span></td>
                             <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-green-500"></span> Présent</span></td>
                             <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
@@ -441,10 +446,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Douanla Bruna</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Marcus Chen</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-500">22P025</td>
+                            <td class="px-6 py-4 font-mono text-slate-500">2023042</td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-400"><span class="inline-flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500 px-2 py-1 rounded text-xs"><span class="material-symbols-outlined text-[14px]">warning</span> 09:18</span></td>
                             <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-green-500"></span> Présent</span></td>
                             <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
@@ -453,10 +458,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Ngoumi Lorelle</div><div class="text-xs text-slate-500">Science des données</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Sarah Williams</div><div class="text-xs text-slate-500">Science des données</div></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-500">22P030</td>
+                            <td class="px-6 py-4 font-mono text-slate-500">2023089</td>
                             <td class="px-6 py-4 text-slate-400 italic">--:--</td>
                             <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-red-500"></span> Absent</span></td>
                             <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
@@ -465,7 +470,7 @@
                 </table>
                  <!-- Pagination -->
                 <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-700 px-6 py-4">
-                    <p class="text-sm text-slate-500">Affichage <span class="font-bold">1-3</span> sur 17</p>
+                    <p class="text-sm text-slate-500">Affichage <span class="font-bold">1-3</span> sur 45</p>
                     <div class="flex gap-2">
                         <button class="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded text-sm disabled:opacity-50" disabled>Précédent</button>
                         <button class="px-3 py-1 border border-slate-200 dark:border-slate-700 rounded text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Suivant</button>
@@ -477,76 +482,76 @@
 
     <!-- VIEW: EXPORT (from i5.html) -->
     <template id="view-export">
-        <div class="flex h-full">
-            <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-100 dark:bg-slate-900">
-                <div class="flex justify-between items-center max-w-[800px] mx-auto mb-4 no-print">
-                    <button onclick="router('review')" class="text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-colors"><span class="material-symbols-outlined">arrow_back</span> Retour au Journal de présence</button>
-                    <button onclick="window.print()" class="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-primary/90 shadow-md transition-all"><span class="material-symbols-outlined">print</span> Imprimer / Enregistrer PDF</button>
+        <div class="flex flex-col md:flex-row h-full">
+            <div class="flex-1 overflow-y-auto p-3 md:p-8 bg-slate-100 dark:bg-slate-900">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center max-w-[800px] mx-auto mb-4 no-print gap-3 md:gap-0">
+                    <button onclick="router('review')" class="text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-colors text-xs md:text-base"><span class="material-symbols-outlined">arrow_back</span> <span class="hidden md:inline">Retour au Journal de présence</span><span class="md:hidden">Retour</span></button>
+                    <button onclick="window.print()" class="bg-primary text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center md:justify-start gap-2 hover:bg-primary/90 shadow-md transition-all text-xs md:text-base"><span class="material-symbols-outlined">print</span> <span class="hidden md:inline">Imprimer / Enregistrer PDF</span><span class="md:hidden">Imprimer</span></button>
                 </div>
 
                 <!-- Paper Preview -->
                 <div class="bg-white text-black w-full max-w-[800px] mx-auto shadow-xl min-h-[1000px] flex flex-col print:shadow-none print:w-full rounded-sm">
-                    <div class="px-12 pt-12 pb-8 border-b-2 border-slate-100">
-                        <div class="flex justify-between items-start mb-8">
+                    <div class="px-6 md:px-12 pt-8 md:pt-12 pb-6 md:pb-8 border-b-2 border-slate-100">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4 md:gap-0 mb-8">
                             <div class="flex items-center gap-3">
-                                <div class="size-12 bg-primary/90 text-white rounded flex items-center justify-center"><span class="material-symbols-outlined text-3xl">school</span></div>
-                                <div><span class="font-bold text-xl block tracking-tight">ENSPY</span><span class="text-sm text-slate-500 font-semibold tracking-widest">Art et Intelligence Artificielle IV</span></div>
+                                <div class="size-10 md:size-12 bg-primary/90 text-white rounded flex items-center justify-center"><span class="material-symbols-outlined text-2xl md:text-3xl">school</span></div>
+                                <div><span class="font-bold text-lg md:text-xl block tracking-tight">ENSPY</span><span class="text-xs md:text-sm text-slate-500 font-semibold tracking-widest">Art et Intelligence Artificielle IV</span></div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-3xl font-black text-slate-900 tracking-tighter">PRÉSENCE</div>
-                                <div class="text-slate-500 font-medium text-sm">RAPPORT #EXP-2025-001</div>
+                            <div class="text-left md:text-right">
+                                <div class="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">PRÉSENCE</div>
+                                <div class="text-slate-500 font-medium text-xs md:text-sm">RAPPORT #EXP-2025-001</div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-8 mt-8 text-sm">
-                            <div><p class="text-slate-400 text-xs font-bold uppercase mb-1">Accueil</p><p class="font-bold text-md text-slate-800">ANI-IA 4057 - Interface Homme Machine</p><p class="text-slate-600">Bloc Pédagogique N2 • Sem. 1, 2025</p></div>
-                            <div class="text-right"><p class="text-slate-400 text-xs font-bold uppercase mb-1">Détails de la session</p><p class="font-bold text-lg text-slate-800">24 oct. 2025</p><p class="text-slate-600">15:50 - 17:50</p></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 mt-8 text-xs md:text-sm">
+                            <div><p class="text-slate-400 text-xs font-bold uppercase mb-1">Accueil</p><p class="font-bold text-sm md:text-md text-slate-800">ANI-IA 4057 - Interface Homme Machine</p><p class="text-slate-600 text-xs md:text-base">Bloc Pédagogique N2 • Sem. 1, 2025</p></div>
+                            <div class="text-left md:text-right"><p class="text-slate-400 text-xs font-bold uppercase mb-1">Détails de la session</p><p class="font-bold text-sm md:text-lg text-slate-800">24 oct. 2025</p><p class="text-slate-600 text-xs md:text-base">15:50 - 17:50</p></div>
                         </div>
                     </div>
-                    <div class="p-12">
-                        <table class="w-full text-left border-collapse">
+                    <div class="p-6 md:p-12 overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs md:text-sm min-w-max md:min-w-full">
                             <thead>
                                 <tr class="border-b border-slate-200">
-                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Matricule</th>
-                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Étudiant</th>
-                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Statut</th>
-                                    <th class="py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Heure</th>
+                                    <th class="py-2 md:py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Matricule</th>
+                                    <th class="py-2 md:py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Étudiant</th>
+                                    <th class="py-2 md:py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Statut</th>
+                                    <th class="py-2 md:py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Heure</th>
                                 </tr>
                             </thead>
-                            <tbody class="text-sm">
+                            <tbody class="text-xs md:text-sm">
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">22P074</td>
-                                    <td class="py-4 font-bold text-slate-800">Taboutsa Fredy</td>
-                                    <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
-                                    <td class="py-4 text-right font-mono text-slate-600">08:55</td>
+                                    <td class="py-2 md:py-4 font-mono text-slate-500">23001</td>
+                                    <td class="py-2 md:py-4 font-bold text-slate-800">Alice Johnson</td>
+                                    <td class="py-2 md:py-4"><span class="text-green-700 font-bold bg-green-50 px-1 md:px-2 py-0.5 md:py-1 rounded-md text-xs md:text-sm">Présent</span></td>
+                                    <td class="py-2 md:py-4 text-right font-mono text-slate-600">08:55</td>
                                 </tr>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">22P025</td>
-                                    <td class="py-4 font-bold text-slate-800">Douanla Bruna</td>
-                                    <td class="py-4"><span class="text-red-700 font-bold bg-red-50 px-2 py-1 rounded-md">Absent</span></td>
-                                    <td class="py-4 text-right font-mono text-slate-600">-</td>
+                                    <td class="py-2 md:py-4 font-mono text-slate-500">23012</td>
+                                    <td class="py-2 md:py-4 font-bold text-slate-800">Sarah Williams</td>
+                                    <td class="py-2 md:py-4"><span class="text-red-700 font-bold bg-red-50 px-1 md:px-2 py-0.5 md:py-1 rounded-md text-xs md:text-sm">Absent</span></td>
+                                    <td class="py-2 md:py-4 text-right font-mono text-slate-600">-</td>
                                 </tr>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">22P030</td>
-                                    <td class="py-4 font-bold text-slate-800">Ngoumi Lorelle</td>
-                                    <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
-                                    <td class="py-4 text-right font-mono text-slate-600">09:02</td>
+                                    <td class="py-2 md:py-4 font-mono text-slate-500">23042</td>
+                                    <td class="py-2 md:py-4 font-bold text-slate-800">Marcus Chen</td>
+                                    <td class="py-2 md:py-4"><span class="text-green-700 font-bold bg-green-50 px-1 md:px-2 py-0.5 md:py-1 rounded-md text-xs md:text-sm">Présent</span></td>
+                                    <td class="py-2 md:py-4 text-right font-mono text-slate-600">09:02</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="mt-auto p-12 bg-slate-50 border-t border-slate-100">
-                        <div class="flex justify-between items-center text-sm">
-                            <div class="flex gap-6">
-                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Présents</span><span class="text-xl font-bold text-green-600">2</span></div>
-                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Absents</span><span class="text-xl font-bold text-red-600">1</span></div>
+                    <div class="mt-auto p-6 md:p-12 bg-slate-50 border-t border-slate-100">
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0 text-xs md:text-sm">
+                            <div class="flex gap-4 md:gap-6">
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Présents</span><span class="text-lg md:text-xl font-bold text-green-600">12</span></div>
+                                <div><span class="block text-xs font-bold text-slate-400 uppercase">Absents</span><span class="text-lg md:text-xl font-bold text-red-600">5</span></div>
                             </div>
-                            <div class="text-right"><p class="text-slate-400 text-xs italic">Généré le 24 oct. 2025</p><p class="text-slate-400 text-xs mt-1">Autorisé par Dr. KAMENI</p></div>
+                            <div class="text-left md:text-right"><p class="text-slate-400 text-xs italic">Généré le 24 oct. 2025</p><p class="text-slate-400 text-xs mt-1">Autorisé par Dr. KAMENI</p></div>
                         </div>
                     </div>
                 </div>
             </div>
             <!-- Settings Panel (Right) -->
-            <div class="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 p-6 hidden xl:block no-print shadow-xl z-10">
+            <div class="w-full md:w-80 bg-white dark:bg-slate-800 md:border-l border-t md:border-t-0 border-slate-200 dark:border-slate-700 p-4 md:p-6 hidden md:block no-print shadow-xl z-10">
                 <h3 class="font-bold mb-6 text-slate-900 dark:text-white">Options d'export</h3>
                 <div class="space-y-4">
                     <label class="flex items-center justify-between cursor-pointer group">

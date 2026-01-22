@@ -7,6 +7,54 @@ const MAX_PHOTOS = 5;
 let currentPhotoMode = 'camera'; // 'camera' or 'upload'
 
 // ====================
+// MOBILE MENU TOGGLE
+// ====================
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('mobile-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const menuIcon = document.getElementById('menu-icon');
+    
+    if (sidebar && overlay && menuIcon) {
+        const isHidden = sidebar.classList.contains('hidden');
+        
+        if (isHidden) {
+            // Open sidebar
+            sidebar.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+            menuIcon.textContent = 'close';
+        } else {
+            // Close sidebar
+            sidebar.classList.add('hidden');
+            overlay.classList.add('hidden');
+            menuIcon.textContent = 'menu';
+        }
+    }
+}
+
+// Close sidebar when a nav item is clicked
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const sidebar = document.getElementById('mobile-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const menuIcon = document.getElementById('menu-icon');
+            
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('hidden');
+                overlay.classList.add('hidden');
+                menuIcon.textContent = 'menu';
+            }
+        });
+    });
+    
+    // Close sidebar when overlay is clicked
+    const overlay = document.getElementById('sidebar-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', toggleMobileSidebar);
+    }
+});
+
+// ====================
 // ROUTER & NAVIGATION
 // ====================
 function router(viewName) {
@@ -82,10 +130,9 @@ async function startCamera(videoElementId) {
             videoElement.muted = true;
             videoElement.playsInline = true;
             videoElement.play().catch(err => {
-                console.log("[v0] Video play error:", err);
+                console.error("Video play error:", err);
             });
             currentStream = stream;
-            console.log("[v0] Camera started successfully");
             return true;
         }
         return false;
