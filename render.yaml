@@ -22,7 +22,7 @@ services:
         curl -O https://storage.cmusatyalab.org/openface-models/nn4.small2.v1.t7
       fi
       cd ..
-    startCommand: gunicorn app:app
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
