@@ -178,27 +178,43 @@
                     <div class="grid md:grid-cols-2 gap-6">
                         <div class="flex flex-col gap-2">
                             <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Nom complet de l'étudiant</label>
-                            <input class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2736] text-slate-900 dark:text-white p-3.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400" placeholder="ex: Fredy TABOUTSA" type="text"/>
+                            <input id="register-name" class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2736] text-slate-900 dark:text-white p-3.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400" placeholder="ex: Fredy TABOUTSA" type="text"/>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Matricule de l'étudiant</label>
-                            <input class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2736] text-slate-900 dark:text-white p-3.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400" placeholder="ex: 22P074" type="text"/>
+                            <input id="register-id" class="w-full rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#1e2736] text-slate-900 dark:text-white p-3.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400" placeholder="ex: 22P074" type="text"/>
                         </div>
                     </div>
                 </div>
                 <div class="p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div class="grid lg:grid-cols-12 gap-8">
+                    <!-- Mode Selection Buttons -->
+                    <div class="flex gap-3 mb-6">
+                        <button onclick="setPhotoMode('camera')" id="mode-camera" class="flex-1 px-4 py-2.5 rounded-xl font-medium transition-all bg-primary text-white hover:bg-blue-600 flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">photo_camera</span> Utiliser la caméra
+                        </button>
+                        <button onclick="setPhotoMode('upload')" id="mode-upload" class="flex-1 px-4 py-2.5 rounded-xl font-medium transition-all bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">upload_file</span> Importer des images
+                        </button>
+                    </div>
+
+                    <!-- CAMERA MODE -->
+                    <div id="camera-mode" class="grid lg:grid-cols-12 gap-8">
                         <div class="lg:col-span-7 flex flex-col gap-4">
                             <div class="relative w-full aspect-[4/3] bg-black rounded-2xl overflow-hidden shadow-lg group">
-                                <div class="absolute inset-0 camera-overlay pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);"></div>
-                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div class="w-48 h-64 border-2 border-white/50 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+                                <div id="register-video-container" class="absolute inset-0 flex items-center justify-center bg-black">
+                                    <video id="register-video" class="w-full h-full object-cover" playsinline></video>
+                                    <div class="absolute inset-0 camera-overlay pointer-events-none" style="background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%);"></div>
+                                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                        <div class="w-48 h-64 border-2 border-white/50 rounded-[50%] shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
+                                    </div>
                                 </div>
                                 <div class="absolute top-4 left-4 flex items-center gap-2 px-3 py-1 bg-black/60 backdrop-blur-sm rounded-full text-white text-xs font-medium">
-                                    <div class="size-2 bg-green-500 rounded-full animate-pulse"></div> Caméra en direct
+                                    <div id="camera-status" class="flex items-center gap-2">
+                                        <div class="size-2 bg-yellow-500 rounded-full animate-pulse"></div> Initialisation...
+                                    </div>
                                 </div>
                                 <div class="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 z-10">
-                                    <button class="size-16 rounded-full border-4 border-white bg-transparent flex items-center justify-center hover:scale-105 transition-all"><div class="size-12 bg-white rounded-full hover:bg-primary transition-colors"></div></button>
+                                    <button id="capture-btn" onclick="capturePhoto()" disabled class="size-16 rounded-full border-4 border-white bg-transparent flex items-center justify-center hover:scale-105 transition-all disabled:opacity-50"><div class="size-12 bg-white rounded-full hover:bg-primary transition-colors"></div></button>
                                 </div>
                             </div>
                         </div>
@@ -207,14 +223,68 @@
                             <div class="mt-auto pt-4 flex items-center justify-between text-xs text-slate-500 border-t border-slate-200 dark:border-slate-700">
                                 <span>Minimum 3 photos requises</span>
                                 <div class="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary w-[60%] rounded-full"></div>
+                                    <div id="progress-bar" class="h-full bg-primary w-0 rounded-full transition-all"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- UPLOAD MODE -->
+                    <div id="upload-mode" class="hidden">
+                        <div class="grid lg:grid-cols-12 gap-8">
+                            <div class="lg:col-span-7 flex flex-col gap-4">
+                                <!-- Upload Zone -->
+                                <div id="upload-zone" class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-700 rounded-2xl overflow-hidden shadow-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all group">
+                                    <input type="file" id="register-file-input" accept="image/*" multiple style="display:none" onchange="handleFileUpload(event)">
+                                    <div class="text-center pointer-events-none">
+                                        <div class="text-5xl text-slate-400 dark:text-slate-500 mb-3">📁</div>
+                                        <p class="text-slate-700 dark:text-slate-300 font-medium mb-1">Cliquez ou déposez vos images</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">JPEG, PNG ou WebP</p>
+                                    </div>
+                                </div>
+                                <script>
+                                    document.getElementById('upload-zone').addEventListener('click', () => {
+                                        document.getElementById('register-file-input').click();
+                                    });
+                                    document.getElementById('upload-zone').addEventListener('dragover', (e) => {
+                                        e.preventDefault();
+                                        document.getElementById('upload-zone').classList.add('border-primary', 'bg-primary/5');
+                                    });
+                                    document.getElementById('upload-zone').addEventListener('dragleave', () => {
+                                        document.getElementById('upload-zone').classList.remove('border-primary', 'bg-primary/5');
+                                    });
+                                    document.getElementById('upload-zone').addEventListener('drop', (e) => {
+                                        e.preventDefault();
+                                        document.getElementById('upload-zone').classList.remove('border-primary', 'bg-primary/5');
+                                        const files = e.dataTransfer.files;
+                                        if (files.length > 0) {
+                                            handleFileUploadDrop(files);
+                                        }
+                                    });
+                                </script>
+                            </div>
+                            <div class="lg:col-span-5 flex flex-col gap-4">
+                                <div class="p-4 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 rounded-xl text-sm border border-blue-100 dark:border-blue-800">Vous pouvez uploader des photos existantes à la place d'utiliser la caméra.</div>
+                                <div class="mt-auto pt-4 flex items-center justify-between text-xs text-slate-500 border-t border-slate-200 dark:border-slate-700">
+                                    <span>Minimum 3 photos requises</span>
+                                    <div class="w-24 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                        <div id="progress-bar-upload" class="h-full bg-primary w-0 rounded-full transition-all"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photos Preview Grid (Shared for both modes) -->
+                    <div id="photos-preview" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-8"></div>
+
+                    <!-- Canvas hidden pour capture -->
+                    <canvas id="register-canvas" style="display:none;"></canvas>
+
+                    <!-- Buttons -->
                     <div class="mt-8 flex justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
                         <button onclick="router('dashboard')" class="px-6 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Annuler</button>
-                        <button class="px-8 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-blue-600 shadow-lg flex items-center gap-2"><span class="material-symbols-outlined">save</span> Enregistrer l'étudiant</button>
+                        <button onclick="submitRegistration()" class="px-8 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-blue-600 shadow-lg flex items-center gap-2"><span class="material-symbols-outlined">save</span> Enregistrer l'étudiant</button>
                     </div>
                 </div>
             </div>
@@ -278,7 +348,7 @@
                                 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/>
                                 <div class="absolute bottom-0 right-0 size-3 bg-success rounded-full border-2 border-white dark:border-slate-800"></div>
                             </div>
-                            <div><p class="text-sm font-bold">Sarah Miller</p><p class="text-xs text-slate-500">Matricule: 2023-CS-042</p></div>
+                            <div><p class="text-sm font-bold">Douanla Bruna</p><p class="text-xs text-slate-500">Matricule: 22P025</p></div>
                         </div>
                         <!-- Item -->
                         <div class="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-sm">
@@ -306,7 +376,7 @@
              <div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-bounce">
                 <div class="bg-white dark:bg-slate-800 shadow-lg rounded-full px-4 py-2 flex items-center gap-3 border border-slate-100 dark:border-slate-700">
                     <span class="flex size-2 rounded-full bg-success"></span>
-                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">Sarah Miller détectée.</p>
+                    <p class="text-sm font-medium text-slate-700 dark:text-slate-200">Fredy Taboutsa détectée.</p>
                 </div>
             </div>
         </div>
@@ -376,10 +446,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Alice Johnson</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Fredy Taboutsa</div><div class="text-xs text-slate-500">Majeure en informatique</div></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-500">2023001</td>
+                            <td class="px-6 py-4 font-mono text-slate-500">22P074</td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-400"><span class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-xs"><span class="material-symbols-outlined text-[14px]">schedule</span> 09:02</span></td>
                             <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-green-500"></span> Présent</span></td>
                             <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
@@ -388,10 +458,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Marcus Chen</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Dounala Bruna</div><div class="text-xs text-slate-500">Génie logiciel</div></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-500">2023042</td>
+                            <td class="px-6 py-4 font-mono text-slate-500">22P025</td>
                             <td class="px-6 py-4 text-slate-600 dark:text-slate-400"><span class="inline-flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500 px-2 py-1 rounded text-xs"><span class="material-symbols-outlined text-[14px]">warning</span> 09:18</span></td>
                             <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-green-500"></span> Présent</span></td>
                             <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
@@ -400,10 +470,10 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     <div class="size-10 rounded-full bg-slate-200 overflow-hidden"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80" class="w-full h-full object-cover"/></div>
-                                    <div><div class="font-bold text-slate-900 dark:text-white">Sarah Williams</div><div class="text-xs text-slate-500">Science des données</div></div>
+                                    <div><div class="font-bold text-slate-900 dark:text-white">Ngoumi Lorelle</div><div class="text-xs text-slate-500">Science des données</div></div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 font-mono text-slate-500">2023089</td>
+                            <td class="px-6 py-4 font-mono text-slate-500">22P030</td>
                             <td class="px-6 py-4 text-slate-400 italic">--:--</td>
                             <td class="px-6 py-4"><span class="inline-flex items-center gap-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2.5 py-0.5 rounded-full text-xs font-semibold"><span class="size-1.5 rounded-full bg-red-500"></span> Absent</span></td>
                             <td class="px-6 py-4 text-right"><button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined">more_vert</span></button></td>
@@ -461,20 +531,20 @@
                             </thead>
                             <tbody class="text-sm">
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">23001</td>
-                                    <td class="py-4 font-bold text-slate-800">Alice Johnson</td>
+                                    <td class="py-4 font-mono text-slate-500">22P074</td>
+                                    <td class="py-4 font-bold text-slate-800">Fredy Taboutsa</td>
                                     <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
                                     <td class="py-4 text-right font-mono text-slate-600">08:55</td>
                                 </tr>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">23012</td>
-                                    <td class="py-4 font-bold text-slate-800">Sarah Williams</td>
+                                    <td class="py-4 font-mono text-slate-500">22P075</td>
+                                    <td class="py-4 font-bold text-slate-800">Douanla Bruna</td>
                                     <td class="py-4"><span class="text-red-700 font-bold bg-red-50 px-2 py-1 rounded-md">Absent</span></td>
                                     <td class="py-4 text-right font-mono text-slate-600">-</td>
                                 </tr>
                                 <tr class="border-b border-slate-100">
-                                    <td class="py-4 font-mono text-slate-500">23042</td>
-                                    <td class="py-4 font-bold text-slate-800">Marcus Chen</td>
+                                    <td class="py-4 font-mono text-slate-500">22P030</td>
+                                    <td class="py-4 font-bold text-slate-800">Ngoumi Lorelle</td>
                                     <td class="py-4"><span class="text-green-700 font-bold bg-green-50 px-2 py-1 rounded-md">Présent</span></td>
                                     <td class="py-4 text-right font-mono text-slate-600">09:02</td>
                                 </tr>

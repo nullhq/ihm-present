@@ -4,6 +4,7 @@
 let currentStream = null;
 let capturedPhotos = [];
 const MAX_PHOTOS = 5;
+let currentPhotoMode = 'camera'; // 'camera' or 'upload'
 
 // ====================
 // ROUTER & NAVIGATION
@@ -27,7 +28,19 @@ function router(viewName) {
             
             // Initialize camera if entering register or capture view
             if (viewName === 'register') {
-                initRegisterCamera();
+                currentPhotoMode = 'camera';
+                // Reset photos
+                capturedPhotos = [];
+                // Initialize UI
+                setTimeout(() => {
+                    const cameraModeEl = document.getElementById('camera-mode');
+                    const uploadModeEl = document.getElementById('upload-mode');
+                    if (cameraModeEl && uploadModeEl) {
+                        cameraModeEl.classList.remove('hidden');
+                        uploadModeEl.classList.add('hidden');
+                        initRegisterCamera();
+                    }
+                }, 100);
             } else if (viewName === 'capture') {
                 initCaptureCamera();
             }
@@ -91,6 +104,35 @@ function showCameraError(message) {
         `;
     }
     alert(`Impossible d'accéder à la caméra: ${message}\n\nAssurez-vous d'avoir autorisé l'accès à la caméra dans votre navigateur.`);
+}
+
+// ====================
+// PHOTO MODE MANAGEMENT
+// ====================
+function setPhotoMode(mode) {
+    currentPhotoMode = mode;
+    const cameraModeEl = document.getElementById('camera-mode');
+    const uploadModeEl = document.getElementById('upload-mode');
+    const modeCamera = document.getElementById('mode-camera');
+    const modeUpload = document.getElementById('mode-upload');
+    
+    if (mode === 'camera') {
+        cameraModeEl.classList.remove('hidden');
+        uploadModeEl.classList.add('hidden');
+        modeCamera.classList.add('bg-primary', 'text-white', 'hover:bg-blue-600');
+        modeCamera.classList.remove('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-200');
+        modeUpload.classList.remove('bg-primary', 'text-white', 'hover:bg-blue-600');
+        modeUpload.classList.add('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-200');
+        initRegisterCamera();
+    } else {
+        cameraModeEl.classList.add('hidden');
+        uploadModeEl.classList.remove('hidden');
+        stopCamera();
+        modeUpload.classList.add('bg-primary', 'text-white', 'hover:bg-blue-600');
+        modeUpload.classList.remove('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-200');
+        modeCamera.classList.remove('bg-primary', 'text-white', 'hover:bg-blue-600');
+        modeCamera.classList.add('bg-slate-200', 'text-slate-700', 'dark:bg-slate-700', 'dark:text-slate-200');
+    }
 }
 
 // ====================
@@ -186,6 +228,9 @@ function updateProgressBar() {
     
     const percentage = Math.min((capturedPhotos.length / 3) * 100, 100);
     progressBar.style.width = `${percentage}%`;
+    
+    // Also update upload progress bar
+    updateProgressBarUpload();
 }
 
 function deletePhoto(photoId) {
@@ -215,6 +260,72 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ====================
+// FILE UPLOAD HANDLING
+// ====================
+function handleFileUpload(event) {
+    const files = event.target.files;
+    handleFileUploadDrop(files);
+}
+
+function handleFileUploadDrop(files) {
+    const fileArray = Array.from(files);
+    
+    fileArray.forEach((file, index) => {
+        if (capturedPhotos.length >= MAX_PHOTOS) return;
+        
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                capturedPhotos.push({
+                    id: Date.now() + index,
+                    dataUrl: e.target.result,
+                    timestamp: new Date().toISOString(),
+                    fileName: file.name
+                });
+                updatePhotosPreview();
+                updateProgressBar();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+function updateProgressBarUpload() {
+    const progressBar = document.getElementById('progress-bar-upload');
+    if (!progressBar) return;
+    
+    const percentage = Math.min((capturedPhotos.length / 3) * 100, 100);
+    progressBar.style.width = `${percentage}%`;
+}
+
+function submitRegistration() {
+    const name = document.getElementById('register-name').value;
+    const id = document.getElementById('register-id').value;
+    
+    if (!name || !id) {
+        alert('Veuillez remplir tous les champs');
+        return;
+    }
+    
+    if (capturedPhotos.length < 3) {
+        alert(`Veuillez fournir au minimum 3 photos (${capturedPhotos.length} actuellement)`);
+        return;
+    }
+    
+    // Success message
+    alert(`Étudiant ${name} (${id}) inscrit avec ${capturedPhotos.length} photos!`);
+    
+    // Reset and go back to dashboard
+    capturedPhotos = [];
+    document.getElementById('register-name').value = '';
+    document.getElementById('register-id').value = '';
+    updatePhotosPreview();
+    updateProgressBar();
+    updateProgressBarUpload();
+    router('dashboard');
+}
 
 // ====================
 // CAPTURE VIEW - Live Session
