@@ -1,10 +1,71 @@
 // ====================
+// CONFIGURATION API
+// ====================
+const API_BASE_URL = window.location.origin + '/api';
+
+// ====================
 // VARIABLES GLOBALES
 // ====================
 let currentStream = null;
 let capturedPhotos = [];
 const MAX_PHOTOS = 5;
-let currentPhotoMode = 'camera'; // 'camera' or 'upload'
+let currentPhotoMode = 'camera';
+let currentSessionData = null;
+
+// ====================
+// API CALLS
+// ====================
+async function apiCall(endpoint, options = {}) {
+    try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erreur API');
+        }
+        
+        return data;
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+async function getStudents() {
+    return await apiCall('/students');
+}
+
+async function getSessions() {
+    return await apiCall('/sessions');
+}
+
+async function getStats() {
+    return await apiCall('/stats');
+}
+
+async function registerStudent(formData) {
+    return await apiCall('/register', {
+        method: 'POST',
+        body: formData
+    });
+}
+
+async function scanImage(formData) {
+    return await apiCall('/scan', {
+        method: 'POST',
+        body: formData
+    });
+}
+
+async function createSession(sessionData) {
+    return await apiCall('/sessions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(sessionData)
+    });
+}
 
 // ====================
 // MOBILE MENU TOGGLE
@@ -18,12 +79,10 @@ function toggleMobileSidebar() {
         const isHidden = sidebar.classList.contains('hidden');
         
         if (isHidden) {
-            // Open sidebar
             sidebar.classList.remove('hidden');
             overlay.classList.remove('hidden');
             menuIcon.textContent = 'close';
         } else {
-            // Close sidebar
             sidebar.classList.add('hidden');
             overlay.classList.add('hidden');
             menuIcon.textContent = 'menu';
@@ -31,7 +90,6 @@ function toggleMobileSidebar() {
     }
 }
 
-// Close sidebar when a nav item is clicked
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -47,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    // Close sidebar when overlay is clicked
     const overlay = document.getElementById('sidebar-overlay');
     if (overlay) {
         overlay.addEventListener('click', toggleMobileSidebar);
@@ -57,29 +114,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // ====================
 // ROUTER & NAVIGATION
 // ====================
-function router(viewName) {
+async function router(viewName) {
     const contentContainer = document.getElementById('app-content');
     const template = document.getElementById(`view-${viewName}`);
     
     if (template) {
-        // Stop any active camera streams before switching views
         stopCamera();
-        
-        // Fade effect
         contentContainer.style.opacity = '0';
         
-        setTimeout(() => {
+        setTimeout(async () => {
             contentContainer.innerHTML = '';
             const clone = template.content.cloneNode(true);
             contentContainer.appendChild(clone);
             contentContainer.style.opacity = '1';
             
-            // Initialize camera if entering register or capture view
-            if (viewName === 'register') {
+            // Initialize view with real data
+            if (viewName === 'dashboard') {
+                await loadDashboardData();
+            } else if (viewName === 'register') {
                 currentPhotoMode = 'camera';
-                // Reset photos
                 capturedPhotos = [];
-                // Initialize UI
                 setTimeout(() => {
                     const cameraModeEl = document.getElementById('camera-mode');
                     const uploadModeEl = document.getElementById('upload-mode');
@@ -91,10 +145,11 @@ function router(viewName) {
                 }, 100);
             } else if (viewName === 'capture') {
                 initCaptureCamera();
+            } else if (viewName === 'review') {
+                await loadReviewData();
             }
         }, 150);
         
-        // Update Sidebar Active State
         document.querySelectorAll('.nav-item').forEach(el => {
             if(el.id === `nav-${viewName}`) {
                 el.classList.add('bg-primary/10', 'text-primary');
@@ -106,6 +161,25 @@ function router(viewName) {
                 el.querySelector('.material-symbols-outlined').classList.remove('fill-1');
             }
         });
+    }
+}
+
+// ====================
+// DASHBOARD - Load Real Data
+// ====================
+async function loadDashboardData() {
+    try {
+        const stats = await getStats();
+        
+        // Update stats in dashboard
+        const statsElements = document.querySelectorAll('.text-3xl.font-bold');
+        if (statsElements.length >= 3) {
+            statsElements[0].textContent = stats.total_students;
+            statsElements[1].textContent = stats.total_sessions;
+            statsElements[2].textContent = `${stats.attendance_rate}%`;
+        }
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
     }
 }
 
@@ -228,29 +302,22 @@ function capturePhoto() {
     
     if (!video || !canvas) return;
     
-    // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Draw video frame to canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     
-    // Convert to data URL
     const photoDataUrl = canvas.toDataURL('image/jpeg', 0.9);
     
-    // Add to captured photos array
     capturedPhotos.push({
         id: Date.now(),
         dataUrl: photoDataUrl,
         timestamp: new Date().toISOString()
     });
     
-    // Update UI
     updatePhotosPreview();
     updateProgressBar();
-    
-    // Visual feedback
     flashEffect();
 }
 
@@ -284,7 +351,6 @@ function updateProgressBar() {
     const percentage = Math.min((capturedPhotos.length / 3) * 100, 100);
     progressBar.style.width = `${percentage}%`;
     
-    // Also update upload progress bar
     updateProgressBarUpload();
 }
 
@@ -306,7 +372,6 @@ function flashEffect() {
     setTimeout(() => flash.remove(), 300);
 }
 
-// Add flash animation to style
 const style = document.createElement('style');
 style.textContent = `
     @keyframes flash {
@@ -355,7 +420,10 @@ function updateProgressBarUpload() {
     progressBar.style.width = `${percentage}%`;
 }
 
-function submitRegistration() {
+// ====================
+// SUBMIT REGISTRATION - REAL API CALL
+// ====================
+async function submitRegistration() {
     const name = document.getElementById('register-name').value;
     const id = document.getElementById('register-id').value;
     
@@ -369,21 +437,46 @@ function submitRegistration() {
         return;
     }
     
-    // Success message
-    alert(`Étudiant ${name} (${id}) inscrit avec ${capturedPhotos.length} photos!`);
+    // Show loading
+    const submitBtn = event.target;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="animate-spin">⏳</span> Inscription...';
     
-    // Reset and go back to dashboard
-    capturedPhotos = [];
-    document.getElementById('register-name').value = '';
-    document.getElementById('register-id').value = '';
-    updatePhotosPreview();
-    updateProgressBar();
-    updateProgressBarUpload();
-    router('dashboard');
+    try {
+        // Convert base64 images to files
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('matricule', id);
+        
+        for (let i = 0; i < capturedPhotos.length; i++) {
+            const photo = capturedPhotos[i];
+            const blob = await fetch(photo.dataUrl).then(r => r.blob());
+            const file = new File([blob], `photo${i + 1}.jpg`, { type: 'image/jpeg' });
+            formData.append('photos', file);
+        }
+        
+        // Call API
+        const result = await registerStudent(formData);
+        
+        alert(`✅ Étudiant ${name} (${id}) inscrit avec succès!`);
+        
+        // Reset
+        capturedPhotos = [];
+        document.getElementById('register-name').value = '';
+        document.getElementById('register-id').value = '';
+        updatePhotosPreview();
+        updateProgressBar();
+        router('dashboard');
+        
+    } catch (error) {
+        alert(`❌ Erreur lors de l'inscription: ${error.message}`);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined">save</span> <span>Enregistrer l\'étudiant</span>';
+    }
 }
 
 // ====================
-// CAPTURE VIEW - Single Room Photo Capture
+// CAPTURE VIEW - Room Photo with REAL API
 // ====================
 async function initCaptureCamera() {
     const success = await startCamera('capture-video');
@@ -393,170 +486,182 @@ async function initCaptureCamera() {
     }
 }
 
-function captureRoomPhoto() {
+async function captureRoomPhoto() {
     const video = document.getElementById('capture-video');
     const canvas = document.getElementById('capture-canvas');
     const loadingDiv = document.getElementById('capture-loading');
+    const captureBtn = document.getElementById('capture-room-btn');
     
     if (!video || !canvas) return;
     
-    // Show loading state
+    // Disable button and show loading
+    if (captureBtn) {
+        captureBtn.disabled = true;
+        captureBtn.innerHTML = '<span class="animate-spin">⏳</span> Analyse...';
+    }
+    
     if (loadingDiv) {
         loadingDiv.classList.remove('hidden');
     }
     
-    // Set canvas size to match video
+    // Capture image
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Draw video frame to canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
     
-    // Convert to data URL
-    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    
-    // Simulate face detection (in production, use a real ML model)
-    setTimeout(() => {
-        processRoomCapture(photoDataUrl);
-        if (loadingDiv) {
-            loadingDiv.classList.add('hidden');
+    // Convert to blob for API
+    canvas.toBlob(async (blob) => {
+        try {
+            const formData = new FormData();
+            formData.append('image', blob, 'capture.jpg');
+            
+            // Call scan API
+            const result = await scanImage(formData);
+            
+            // Store session data
+            currentSessionData = result;
+            
+            // Display results
+            const photoDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            processRoomCapture(photoDataUrl, result);
+            
+        } catch (error) {
+            alert(`❌ Erreur lors du scan: ${error.message}`);
+            if (captureBtn) {
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<span class="material-symbols-outlined text-sm">camera</span> Capturer la salle';
+            }
+        } finally {
+            if (loadingDiv) {
+                loadingDiv.classList.add('hidden');
+            }
         }
-    }, 1500);
+    }, 'image/jpeg', 0.95);
 }
 
-function processRoomCapture(photoDataUrl) {
-    // Show captured image
+function processRoomCapture(photoDataUrl, apiResult) {
     const previewContainer = document.getElementById('capture-preview-container');
     const video = document.getElementById('capture-video');
     const captureStats = document.getElementById('capture-stats');
     const status = document.getElementById('capture-status');
+    const captureBtn = document.getElementById('capture-room-btn');
     
     if (previewContainer && video) {
         video.style.display = 'none';
         
-        // Create image element for captured photo
         const img = document.createElement('img');
         img.src = photoDataUrl;
         img.className = 'w-full h-full object-cover';
         img.id = 'captured-room-image';
         
-        // Clear container and add image
         previewContainer.innerHTML = '';
         previewContainer.appendChild(img);
     }
     
-    // Simulate face detection results
-    const detectedFaces = [
-        { name: 'Sarah M.', id: '22P001', x: 20, y: 30, w: 12, h: 18, detected: true },
-        { name: 'David K.', id: '22P074', x: 45, y: 35, w: 10, h: 15, detected: true },
-        { name: 'Inconnu', id: 'unknown', x: 70, y: 40, w: 11, h: 16, detected: false }
-    ];
-    
-    // Update detected count
-    const detectedCount = detectedFaces.filter(f => f.detected).length;
+    // Update UI with real results
+    const detectedCount = apiResult.recognized.length;
     const detectedCountEl = document.getElementById('detected-count');
     if (detectedCountEl) {
         detectedCountEl.textContent = detectedCount;
     }
     
-    // Show stats
     if (captureStats) {
         captureStats.classList.remove('hidden');
     }
     
-    // Update status
     if (status) {
         status.innerHTML = `
             <div class="flex items-center gap-2">
                 <div class="size-2 bg-green-500 rounded-full"></div>
-                <span class="text-green-600">Capture complète - ${detectedCount} étudiants détectés</span>
+                <span class="hidden sm:inline">Capture complète - ${detectedCount} étudiants détectés</span>
+                <span class="sm:hidden">${detectedCount} détectés</span>
             </div>
         `;
         status.classList.remove('text-yellow-600', 'bg-yellow-100');
         status.classList.add('text-green-600', 'bg-green-100');
     }
     
-    // Draw bounding boxes on image
-    drawDetectionBoxes(photoDataUrl, detectedFaces);
+    // Enable save button
+    if (captureBtn) {
+        captureBtn.disabled = false;
+        captureBtn.innerHTML = '<span class="material-symbols-outlined text-sm">save</span> Enregistrer la séance';
+        captureBtn.onclick = saveSession;
+    }
     
     // Update sidebar with results
-    updateDetectionResults(detectedFaces);
+    updateDetectionResults(apiResult.recognized, apiResult.unknowns);
     
     // Update attendance stats
-    updateAttendanceStats(detectedFaces);
+    updateAttendanceStats(apiResult.total_presents, detectedCount);
 }
 
-function drawDetectionBoxes(photoDataUrl, faces) {
-    const container = document.getElementById('detected-faces-container');
-    if (!container) return;
+async function saveSession() {
+    if (!currentSessionData) {
+        alert('Aucune capture à enregistrer');
+        return;
+    }
     
-    container.innerHTML = '';
-    container.classList.remove('hidden');
-    
-    faces.forEach((face, index) => {
-        const box = document.createElement('div');
-        box.className = `absolute border-2 rounded-lg ${face.detected ? 'border-green-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'border-yellow-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]'} flex flex-col items-center justify-end pb-2`;
-        box.style.left = `${face.x}%`;
-        box.style.top = `${face.y}%`;
-        box.style.width = `${face.w}%`;
-        box.style.height = `${face.h}%`;
+    try {
+        const sessionData = {
+            course_name: 'Interface Homme Machine',
+            course_code: 'ANI-IA 4057',
+            ...currentSessionData
+        };
         
-        const label = document.createElement('div');
-        label.className = `${face.detected ? 'bg-green-500' : 'bg-yellow-500'} text-white text-[10px] font-bold px-2 py-0.5 rounded-full translate-y-1/2`;
-        label.textContent = face.name;
+        await createSession(sessionData);
+        alert('✅ Séance enregistrée avec succès!');
+        router('review');
         
-        box.appendChild(label);
-        container.appendChild(box);
-    });
+    } catch (error) {
+        alert(`❌ Erreur lors de l'enregistrement: ${error.message}`);
+    }
 }
 
-function updateDetectionResults(faces) {
+function updateDetectionResults(recognizedStudents, unknownCount) {
     const list = document.getElementById('detected-students-list');
     if (!list) return;
     
     list.innerHTML = '';
     
-    const detectedStudents = faces.filter(f => f.detected);
-    const unknownStudents = faces.filter(f => !f.detected);
-    
-    if (detectedStudents.length === 0 && unknownStudents.length === 0) {
+    if (recognizedStudents.length === 0 && unknownCount === 0) {
         list.innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Aucun visage détecté</p>';
         return;
     }
     
-    // Detected students
-    if (detectedStudents.length > 0) {
+    // Recognized students
+    if (recognizedStudents.length > 0) {
         const header = document.createElement('p');
         header.className = 'text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mt-3';
-        header.textContent = `Reconnus (${detectedStudents.length})`;
+        header.textContent = `Reconnus (${recognizedStudents.length})`;
         list.appendChild(header);
         
-        detectedStudents.forEach(student => {
+        recognizedStudents.forEach(student => {
             const item = document.createElement('div');
             item.className = 'flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-green-200 dark:border-green-900/30 rounded-lg shadow-sm';
             item.innerHTML = `
                 <div class="relative size-10 rounded-full overflow-hidden bg-green-100">
-                    <span class="material-symbols-outlined text-green-600">check_circle</span>
+                    <img src="/${student.photo}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}'">
                     <div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
                 </div>
                 <div>
                     <p class="text-sm font-bold">${student.name}</p>
-                    <p class="text-xs text-slate-500">Matricule: ${student.id}</p>
+                    <p class="text-xs text-slate-500">Matricule: ${student.matricule}</p>
                 </div>
             `;
             list.appendChild(item);
         });
     }
     
-    // Unknown/Unrecognized students
-    if (unknownStudents.length > 0) {
+    // Unknown students
+    if (unknownCount > 0) {
         const header = document.createElement('p');
         header.className = 'text-xs font-bold text-slate-500 uppercase tracking-wider px-1 mt-3';
-        header.textContent = `Non identifiés (${unknownStudents.length})`;
+        header.textContent = `Non identifiés (${unknownCount})`;
         list.appendChild(header);
         
-        unknownStudents.forEach(student => {
+        for (let i = 0; i < unknownCount; i++) {
             const item = document.createElement('div');
             item.className = 'flex items-center gap-3 p-3 bg-white dark:bg-slate-800 border border-yellow-200 dark:border-yellow-900/30 rounded-lg shadow-sm';
             item.innerHTML = `
@@ -564,19 +669,18 @@ function updateDetectionResults(faces) {
                     <span class="material-symbols-outlined text-yellow-600">help</span>
                 </div>
                 <div>
-                    <p class="text-sm font-bold flex items-center gap-1">${student.name} <span class="material-symbols-outlined text-yellow-600 text-sm">warning</span></p>
+                    <p class="text-sm font-bold flex items-center gap-1">Inconnu ${i + 1} <span class="material-symbols-outlined text-yellow-600 text-sm">warning</span></p>
                     <p class="text-xs text-slate-500">À identifier manuellement</p>
                 </div>
             `;
             list.appendChild(item);
-        });
+        }
     }
 }
 
-function updateAttendanceStats(faces) {
-    const detectedCount = faces.filter(f => f.detected).length;
-    const totalCount = 45; // Class size
-    const percentage = Math.round((detectedCount / totalCount) * 100);
+function updateAttendanceStats(totalDetected, recognizedCount) {
+    const totalCount = 45; // Could be fetched from API
+    const percentage = Math.round((recognizedCount / totalCount) * 100);
     
     const progressBar = document.getElementById('attendance-progress');
     const percentText = document.getElementById('attendance-percent');
@@ -589,30 +693,107 @@ function updateAttendanceStats(faces) {
         percentText.textContent = `${percentage}% Présents`;
     }
     if (absentText) {
-        absentText.textContent = `${totalCount - detectedCount} Absents`;
+        absentText.textContent = `${totalCount - recognizedCount} Absents`;
     }
 }
 
-function stopCaptureSession() {
-    stopCamera();
-    router('review');
+// ====================
+// REVIEW VIEW - Load Real Sessions
+// ====================
+async function loadReviewData() {
+    try {
+        const { sessions } = await getSessions();
+        const { students: allStudents } = await getStudents();
+        
+        if (sessions.length === 0) {
+            return;
+        }
+        
+        // Get latest session
+        const latestSession = sessions[sessions.length - 1];
+        
+        // Build attendance list
+        const attendanceList = allStudents.map(student => {
+            const attended = latestSession.students.find(s => s.matricule === student.matricule);
+            return {
+                ...student,
+                present: !!attended,
+                time: attended ? latestSession.time : '--:--'
+            };
+        });
+        
+        // Update stats
+        const presentCount = attendanceList.filter(s => s.present).length;
+        const absentCount = attendanceList.length - presentCount;
+        const rate = Math.round((presentCount / attendanceList.length) * 100);
+        
+        // Update DOM
+        const statsElements = document.querySelectorAll('.text-3xl.font-bold');
+        if (statsElements.length >= 4) {
+            statsElements[0].textContent = allStudents.length;
+            statsElements[1].textContent = presentCount;
+            statsElements[2].textContent = absentCount;
+            statsElements[3].textContent = `${rate}%`;
+        }
+        
+        // Update table
+        const tbody = document.querySelector('tbody');
+        if (tbody) {
+            tbody.innerHTML = '';
+            
+            attendanceList.forEach(student => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors';
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="size-10 rounded-full bg-slate-200 overflow-hidden">
+                                <img src="/${student.photo}" class="w-full h-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(student.name)}'">
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-900 dark:text-white">${student.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-mono text-slate-500">${student.matricule}</td>
+                    <td class="px-6 py-4 text-slate-600 dark:text-slate-400">
+                        <span class="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-xs">
+                            <span class="material-symbols-outlined text-[14px]">schedule</span> ${student.time}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1 ${student.present ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'} px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                            <span class="size-1.5 rounded-full ${student.present ? 'bg-green-500' : 'bg-red-500'}"></span> 
+                            ${student.present ? 'Présent' : 'Absent'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-slate-400 hover:text-primary">
+                            <span class="material-symbols-outlined">more_vert</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error loading review data:', error);
+    }
 }
 
 // ====================
 // INITIALIZATION
 // ====================
 document.addEventListener('DOMContentLoaded', () => {
-    // Add transition style
     const appContent = document.getElementById('app-content');
     if (appContent) {
         appContent.style.transition = 'opacity 0.2s ease-in-out';
     }
     
-    // Load Dashboard by default
     router('dashboard');
 });
 
-// Cleanup camera on page unload
 window.addEventListener('beforeunload', () => {
     stopCamera();
 });

@@ -8,10 +8,12 @@ import io
 import os
 from src.utils.math import cosine_similarity
 
-DB_DIR = "db"
-DB_PATH = os.path.join(DB_DIR, "students.json")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+DB_DIR = os.path.join(BASE_DIR, "db")
 IMAGES_DIR = os.path.join(DB_DIR, "images")
-MODELS_DIR = "models"
+MODELS_DIR = os.path.join(BASE_DIR, "models")
+DB_PATH = os.path.join(DB_DIR, "students.json")
 
 # Ensure directories exist
 os.makedirs(IMAGES_DIR, exist_ok=True)
@@ -20,7 +22,7 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 # Paths to model files (you need to download these)
 FACE_DETECTOR_PROTOTXT = os.path.join(MODELS_DIR, "deploy.prototxt")
 FACE_DETECTOR_MODEL = os.path.join(MODELS_DIR, "res10_300x300_ssd_iter_140000.caffemodel")
-FACE_RECOGNIZER_MODEL = os.path.join(MODELS_DIR, "openface_nn4.small2.v1.t7")
+FACE_RECOGNIZER_MODEL = os.path.join(MODELS_DIR, "nn4.small2.v1.t7")
 
 # Load models globally (only once)
 face_detector = None
@@ -127,8 +129,14 @@ def get_face_embedding(image_np, face_box):
 
 def load_db():
     if os.path.exists(DB_PATH):
-        with open(DB_PATH, 'r') as f:
-            return json.load(f)
+        try:
+            with open(DB_PATH, 'r') as f:
+                content = f.read().strip()
+                if not content:
+                    return {}
+                return json.loads(content)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {}
     return {}
 
 def save_db(db):
