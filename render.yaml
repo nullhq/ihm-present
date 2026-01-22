@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: ihm-present
+    runtime: python
+    env: python
+    region: france
+    plan: free
+    branch: master
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      mkdir -p models
+      cd models
+      # Télécharger les modèles OpenCV si pas présents
+      if [ ! -f deploy.prototxt ]; then
+        curl -O https://raw.githubusercontent.com/opencv/opencv/master/samples/dnn/face_detector/deploy.prototxt
+      fi
+      if [ ! -f res10_300x300_ssd_iter_140000.caffemodel ]; then
+        curl -L -O https://github.com/opencv/opencv_3rdparty/raw/dnn_samples_face_detector_20170830/res10_300x300_ssd_iter_140000.caffemodel
+      fi
+      if [ ! -f openface_nn4.small2.v1.t7 ]; then
+        curl -O https://storage.cmusatyalab.org/openface-models/nn4.small2.v1.t7
+      fi
+      cd ..
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 10000
+    disk:
+      name: data-disk
+      mountPath: /opt/render/project/src/db  # monte le disk sur le dossier db/
+      sizeGB: 1
