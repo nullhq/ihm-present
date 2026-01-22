@@ -1,7 +1,7 @@
 # src/routes/api.py
 
 from flask import Blueprint, request, jsonify
-from src.services.recognition import register_student, scan_image
+from src.controlleurs.recognition import register_student, scan_image
 
 api = Blueprint('api', __name__)
 
